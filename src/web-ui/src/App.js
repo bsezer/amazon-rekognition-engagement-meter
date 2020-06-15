@@ -6,6 +6,7 @@ import { Col, Grid, Row } from "react-bootstrap";
 
 import CameraHelp from "./components/CameraHelp";
 import EngagementSummary from "./components/EngagementsSummary";
+import MicroExpressionChart from "./components/MicroExpressionChart";
 import Header from "./components/Header";
 import PolarChart from "./components/PolarChart";
 import SettingsHelp from "./components/SettingsHelp";
@@ -23,6 +24,27 @@ export default () => {
     surprised: 0
   });
 
+
+  // let history = {
+  //   calmMap : new Map(),
+  //   angryMap : new Map(),
+  //   sadMap : new Map(),
+  //   happyMap : new Map(),
+  //   suprisedMap : new Map(),
+  //   fearMap : new Map(),
+  //   disgustedMap : new Map()
+  // };
+
+  const [history, setHistory] = useState({
+    calmMap : new Map(),
+    angryMap : new Map(),
+    sadMap : new Map(),
+    happyMap : new Map(),
+    suprisedMap : new Map(),
+    fearMap : new Map(),
+    disgustedMap : new Map()
+  });
+
   const [detectedFaces, setDetectedFaces] = useState([]);
   const [detectedPeople, setDetectedPeople] = useState([]);
   const [happyometer, setHappyometer] = useState(50);
@@ -32,17 +54,30 @@ export default () => {
   const iterating = useRef(false);
   const people = useRef([]);
   const webcam = useRef(undefined);
-
   const addUser = params => gateway.addUser(params);
 
   const getSnapshot = () => {
     setWebcamCoordinates(findDOMNode(webcam.current).getBoundingClientRect());
 
+    //TODO THE SCREENSHOT IS GOT HERE! AND PASSED ALONG
     const image = webcam.current.getScreenshot();
     const b64Encoded = image.split(",")[1];
+    // const timeDetected = new Date().getTime() - 3600 * 90;
 
-    gateway.getEngagement().then(response => {
-      const chartData = getChartData(response);
+    //todo this should only be grabbing in 1 second intervals. instead of grabbing all.
+    // need to change the back-end for the query
+   // const timeDetected = new Date().getTime() - 3600 * 90;
+    // const timeDetected = new Date().getTime() - 5 * 90;
+    var date = new Date();
+    date.setSeconds(date.getSeconds() - 1);
+    var timeDetected = date.getTime();
+
+    //TODO YOUR PROB IS THE NEXT API CALL ERASES YOUR DATA!
+    // SO YOU NEED TO AGGREGAEFE FOR 30 secomnds or something
+    // or change the query to give you 30 second internvals
+    // todo then create teh chart. 
+    gateway.getEngagement(timeDetected).then(response => {
+      const chartData = getChartData(response, timeDetected);
 
       if (chartData.happyometer) {
         setHappyometer(chartData.happyometer);
@@ -50,6 +85,13 @@ export default () => {
 
       if (chartData.aggregate) {
         setAggregate(chartData.aggregate);
+      }
+
+      if (chartData.history) {
+         setHistory(chartData.history);
+        // console.log("chartData.history.calmMapzzz " + chartData.history.calmMap.get(timeDetected));
+        // history = chartData.history;
+        // console.log("chartData.history.calmMapzzz " + history.calmMap.get(timeDetected));
       }
     });
 
@@ -83,6 +125,7 @@ export default () => {
   const setupWebcam = instance => {
     webcam.current = instance;
 
+    //TODO DECREASE THE LENGTH HERE!!!
     const checkIfReady = () => {
       if (
         webcam.current &&
@@ -106,6 +149,7 @@ export default () => {
       });
     }
   };
+    //TODO Webcam DOWN THERE!!!
 
   return (
     <div className="App">
@@ -157,6 +201,9 @@ export default () => {
                       </Col>
                     </Row>
                   </Grid>
+                  <MicroExpressionChart
+                    emotions={history}
+                   />
                 </Col>
                 <Col md={4} sm={6}>
                   <EngagementSummary

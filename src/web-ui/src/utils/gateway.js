@@ -20,8 +20,12 @@ export default {
     return request("/faces/detect", "post", { image });
   },
 
-  getEngagement() {
-    const timeDetected = new Date().getTime() - 3600 * 90;
+  getEngagement(timeDetected) {
+    // revert this back!!!!
+
+
+
+    // const timeDetectedz = new Date().getTime() - 3600 * 90;
     return request(`/engagement?timeDetected=${timeDetected}`);
   },
 
